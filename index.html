@@ -817,7 +817,7 @@ function setArea(a){sel=a;chips.querySelectorAll('.chip').forEach(c=>c.setAttrib
 function fit(){const pts=D.filter(visible).map(p=>[p.lat,p.lng]);if(pts.length===1)map.setView(pts[0],17);else map.fitBounds(pts,{padding:[50,50],maxZoom:17})}
 const list=document.getElementById('list'),q=document.getElementById('q');
 function render(){const t=q.value.trim();list.innerHTML=D.filter(p=>visible(p)&&(!t||p.name.includes(t))).map(p=>`<li data-n="${p.n}" class="${hl===p.n?'on':''}" tabindex="0"><span class="num" style="background:${p.n===1?'#33373d':AREAS[p.area]}">${p.n}</span><span><b>${p.name}</b><small>${p.area} · ${p.desc}</small></span></li>`).join('')}
-function hilite(n,fly){hl=n;render();const p=D[n-1];if(fly){if(innerWidth<=760)document.querySelector('.wrapmap').scrollIntoView({behavior:'smooth',block:'start'});map.flyTo([p.lat,p.lng],18,{duration:.8});map.once('moveend',()=>markers[n].openPopup())}}
+function hilite(n,fly){hl=n;render();const p=D[n-1];track('فتح مشروع',p.name);if(fly){if(innerWidth<=760)document.querySelector('.wrapmap').scrollIntoView({behavior:'smooth',block:'start'});map.flyTo([p.lat,p.lng],18,{duration:.8});map.once('moveend',()=>markers[n].openPopup())}}
 list.addEventListener('click',e=>{const li=e.target.closest('li');if(li)hilite(+li.dataset.n,true)});
 list.addEventListener('keydown',e=>{if(e.key==='Enter'){const li=e.target.closest('li');if(li)hilite(+li.dataset.n,true)}});
 q.addEventListener('input',render);
@@ -826,8 +826,16 @@ document.addEventListener('click',async e=>{const b=e.target.closest('.shr');if(
   if(navigator.share&&matchMedia('(pointer:coarse)').matches){try{await navigator.share({title:p.name,text:`${p.name} – مكي للتطوير العقاري`,url});return}catch(err){if(err&&err.name==='AbortError')return}}
   try{await navigator.clipboard.writeText(`${p.name}\n${url}`);done('تم نسخ الرابط ✓')}catch(_){
     const t=document.createElement('textarea');t.value=`${p.name}\n${url}`;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}t.remove();done(ok?'تم نسخ الرابط ✓':'تعذّر النسخ')}});
+
+function track(kind,name){try{if(window.goatcounter&&goatcounter.count)goatcounter.count({path:kind+' – '+name,title:kind,event:true})}catch(_){}}
+document.addEventListener('click',e=>{const a=e.target.closest('a.cta.wa,a.go.call,a.go.dir,.leaflet-popup-content .links a,.shr,a.hot');if(!a)return;
+  if(a.matches('a.hot')){track('اتصال','الترويسة');return}
+  const box=a.closest('.leaflet-popup-content'),name=box?box.querySelector('b').textContent:'';
+  const kind=a.matches('.wa')?'واتساب':a.matches('.call')?'اتصال':a.matches('.dir')?'اتجاهات':a.matches('.shr')?'مشاركة':/apple/i.test(a.href)?'Apple Maps':'Google Maps';
+  track(kind,name)},true);
 fit();render();labels();
 })();
 </script>
+<script data-goatcounter="https://mekkymap.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
